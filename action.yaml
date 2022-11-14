@@ -1,0 +1,68 @@
+name: "Update Python Dependencies"
+description: "Update requirements.txt dependencies for non-versioned packages"
+
+branding:
+  icon: "box"
+  color: "purple"
+
+inputs:
+  path:
+    description: "path to requirements.txt file"
+    required: false
+    default: "requirements.txt"
+  token:
+    description: "The GITHUB_TOKEN secret"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: Update dependencies
+      id: reqs
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        git checkout -b requirements-txt || git checkout requirements-txt
+        git reset --hard origin/${{ env.GITHUB_REF_NAME }}
+
+        repos=`grep 'github.com/laws-africa/' ${{ inputs.path }} | sed -E 's/^.+github.com\/laws-africa\/([^.]+)\.git@(.+)#(.+)$/\1@\2/g'`
+        for pair in $repos; do
+          repo=`echo $pair | cut -d@ -f 1`
+          curr_sha=`echo $pair | cut -d@ -f 2`
+
+          # get default branch
+          branch=`gh api /repos/laws-africa/$repo | jq -r .default_branch`
+
+          # get latest sha and commit message
+          gh api '/repos/laws-africa/$repo/commits/$branch?per_page=1' > /tmp/tmp.json
+          new_sha=`jq -r .sha /tmp/tmp.json`
+          msg=`jq -r .commit.message /tmp/tmp.json | head -1`
+
+          if [ "$curr_sha" != "$new_sha" ]; then
+            echo $repo is now at $new_sha and was at $curr_sha
+            sed -i -E 's/('$repo'.git@)([a-z0-9]+)/\1'$new_sha'/g' ${{ inputs.path }}
+
+            summary="$summary"$'\n'"- [$repo](https://github.com/laws-africa/$repo) @ ${new_sha:0:8} - $msg"
+          fi
+        done
+
+        # stop if there are no changes
+        git diff --exit-code && exit 0
+
+        # escape newlines
+        summary="${summary//$'\n'/'%0A'}"
+        echo "::set-output name=summary::$summary"
+
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v4
+      if: steps.reqs.outputs.summary
+      with:
+        token: "${{ inputs.token }}"
+        commit-message: "Update dependencies in ${{ inputs.path }}"
+        title: "Update dependencies in ${{ inputs.path }}"
+        branch: requirements-txt
+        base: "${{ env.GITHUB_REF_NAME }}"
+        delete-branch: true
+        add-paths: "${{ inputs.path }}"
+        body: "${{ steps.reqs.outputs.summary }}"
