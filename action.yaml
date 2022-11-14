@@ -34,7 +34,7 @@ runs:
           branch=`gh api /repos/laws-africa/$repo | jq -r .default_branch`
 
           # get latest sha and commit message
-          gh api '/repos/laws-africa/$repo/commits/$branch?per_page=1' > /tmp/tmp.json
+          gh api "/repos/laws-africa/$repo/commits/$branch?per_page=1" > /tmp/tmp.json
           new_sha=`jq -r .sha /tmp/tmp.json`
           msg=`jq -r .commit.message /tmp/tmp.json | head -1`
 
