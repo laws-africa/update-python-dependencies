@@ -23,7 +23,7 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
       run: |
         git checkout -b requirements-txt || git checkout requirements-txt
-        git reset --hard origin/${{ env.GITHUB_REF_NAME }}
+        git reset --hard origin/${{ GITHUB_REF_NAME }}
 
         repos=`grep 'github.com/laws-africa/' ${{ inputs.path }} | sed -E 's/^.+github.com\/laws-africa\/([^.]+)\.git@(.+)#(.+)$/\1@\2/g'`
         for pair in $repos; do
@@ -61,7 +61,7 @@ runs:
         commit-message: "Update dependencies in ${{ inputs.path }}"
         title: "Update dependencies in ${{ inputs.path }}"
         branch: requirements-txt
-        base: "${{ env.GITHUB_REF_NAME }}"
+        base: "${{ GITHUB_REF_NAME }}"
         delete-branch: true
         add-paths: "${{ inputs.path }}"
         body: "${{ steps.reqs.outputs.summary }}"
