@@ -51,7 +51,7 @@ runs:
         echo "summary=$summary" >> $GITHUB_OUTPUT
 
     - name: Create pull request
-      uses: peter-evans/create-pull-request@v4
+      uses: peter-evans/create-pull-request@v6
       if: steps.reqs.outputs.summary
       with:
         token: "${{ inputs.token }}"
