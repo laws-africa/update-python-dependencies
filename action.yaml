@@ -22,7 +22,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        repos=`grep 'github.com/laws-africa/' ${{ inputs.path }} | sed -E 's/^.+github.com\/laws-africa\/([^.]+)\.git@(.+)#(.+)$/\1@\2/g'`
+        repos=`grep 'github.com/laws-africa/' ${{ inputs.path }} | sed -E 's/^.+github.com\/laws-africa\/([^.]+)\.git@([a-z0-9]+)(#.+)?$/\1@\2/g'`
         for pair in $repos; do
           repo=`echo $pair | cut -d@ -f 1`
           curr_sha=`echo $pair | cut -d@ -f 2`
