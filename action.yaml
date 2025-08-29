@@ -1,5 +1,5 @@
 name: "Update Python Dependencies"
-description: "Update requirements.txt dependencies for non-versioned packages"
+description: "Update python dependencies for non-versioned packages"
 
 branding:
   icon: "box"
@@ -7,7 +7,7 @@ branding:
 
 inputs:
   path:
-    description: "path to requirements.txt file"
+    description: "path to requirements.txt or pyroject.toml file"
     required: false
     default: "requirements.txt"
   token:
@@ -54,7 +54,7 @@ runs:
         token: "${{ inputs.token }}"
         commit-message: "Update dependencies in ${{ inputs.path }}"
         title: "Update dependencies in ${{ inputs.path }}"
-        branch: requirements-txt
+        branch: dependencies
         delete-branch: true
         add-paths: "${{ inputs.path }}"
         body: "${{ steps.reqs.outputs.summary }}"
