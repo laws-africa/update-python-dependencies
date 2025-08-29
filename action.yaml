@@ -22,11 +22,8 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        repos=`grep 'github.com/laws-africa/' ${{ inputs.path }} | sed -E 's/^.+github.com\/laws-africa\/([^.]+)\.git@([a-z0-9]+)(#.+)?$/\1@\2/g'`
-        for pair in $repos; do
-          repo=`echo $pair | cut -d@ -f 1`
-          curr_sha=`echo $pair | cut -d@ -f 2`
-
+        repos=`grep 'github.com/laws-africa/' ${{ inputs.path }} | sed -E 's=^.+github.com/laws-africa/([^.]+)\.git@([a-z0-9]+)#?.*$=\1 \2=g'`
+        while read -r repo curr_sha; do
           # get default branch
           branch=`gh api /repos/laws-africa/$repo | jq -r .default_branch`
 
@@ -41,7 +38,7 @@ runs:
 
             summary="$summary"$'\n'"- [$repo](https://github.com/laws-africa/$repo) @ ${new_sha:0:8} - $msg"
           fi
-        done
+        done <<< "$repos"
 
         # stop if there are no changes
         git diff --exit-code && exit 0
